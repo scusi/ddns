@@ -1,22 +1,19 @@
-// Implements Dynamic DNS HTTP API used by NoIP, Vollmar and others
+// Package ddns implements Dynamic DNS HTTP API used by NoIP, Vollmar and others
 package ddns // import "github.com/scusi/DynDNSClient/lib"
 
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 )
 
+// Parameters holds all information needed to perfom ddns updates
 type Parameters struct {
-	Url      string
+	URL      string
 	Hostname string
 	Username string
 	Password string
-}
-
-func init() {
 }
 
 /*
@@ -30,11 +27,11 @@ func main() {
 	p. URL = "https://api.isp.net/ddnsUpdate"
 	p.User = "me"
 	p.Host = "myPasswd"
-	u, err := ddns.UrlFromParameters(&parameters)
+	u, err := ddns.URLFromParameters(&parameters)
 	if err != nil {
 		log.Fatal(err)
 	}
-	body, err := ddns.CallApi(u)
+	body, err := ddns.CallAPI(u)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,35 +39,34 @@ func main() {
 }
 */
 
-func UrlFromParameters(p *Parameters) (u *url.URL, err error) {
-	u, err = url.Parse(p.Url)
+// URLFromParameters takes parameters and forms the url used to call the API
+func URLFromParameters(p *Parameters) (u *url.URL, err error) {
+	u, err = url.Parse(p.URL)
 	if err != nil {
 		return u, err
 	}
-	u.User = url.UserPassword(parameters.Username, parameters.Password)
+	u.User = url.UserPassword(p.Username, p.Password)
 	q := u.Query()
-	q.Set("hostname", parameters.Hostname)
+	q.Set("hostname", p.Hostname)
 	u.RawQuery = q.Encode()
-	//log.Printf("Final URL: %s\n", u.String())
 	return u, nil
 }
 
-func CallApi(u *url.URL) (body []byte, err error) {
+// CallAPI takes the URL and makes a request to the API
+func CallAPI(u *url.URL) (body []byte, err error) {
 	// make the request
 	resp, err := http.Get(u.String())
 	if err != nil {
 		return body, err
 	}
 	if resp.StatusCode != 200 {
-		err = fmt.Errorf("Unexpected Statuscode return: %s\n", resp.StatusCode)
+		err = fmt.Errorf("Unexpected Statuscode return: ''%d'\n", resp.StatusCode)
 		return body, err
 	}
-	//log.Printf("Response: %v\n", resp)
 	defer resp.Body.Close()
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return body, err
 	}
-	//log.Printf("Body: %s\n", body)
 	return body, nil
 }
