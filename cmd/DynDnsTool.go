@@ -48,7 +48,7 @@ func urlFromParameters(p *Parameters) (u *url.URL, err error) {
 	q := u.Query()
 	q.Set("hostname", parameters.Hostname)
 	u.RawQuery = q.Encode()
-	log.Printf("Final URL: %s\n", u.String())
+	//log.Printf("Final URL: %s\n", u.String())
 	return u, nil
 }
 
@@ -62,12 +62,12 @@ func callApi(u *url.URL) (body []byte, err error) {
 		err = fmt.Errorf("Unexpected Statuscode return: %s\n", resp.StatusCode)
 		return body, err
 	}
-	log.Printf("Response: %v\n", resp)
+	//log.Printf("Response: %v\n", resp)
 	defer resp.Body.Close()
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return body, err
 	}
-	log.Printf("Body: %s\n", body)
+	//log.Printf("Body: %s\n", body)
 	return body, nil
 }
