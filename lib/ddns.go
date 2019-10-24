@@ -1,5 +1,5 @@
 // Package ddns implements Dynamic DNS HTTP API used by NoIP, Vollmar and others
-package ddns // import "github.com/scusi/DynDNSClient/lib"
+package ddns // import "github.com/scusi/ddns/lib"
 
 import (
 	"fmt"
@@ -12,6 +12,7 @@ import (
 type Parameters struct {
 	URL      string
 	Hostname string
+	MyIP     string
 	Username string
 	Password string
 }
@@ -24,18 +25,28 @@ type Parameters struct {
 func main() {
 	p := new(ddns.Parameters)
 	p.Hostname = "mybox.me"
-	p. URL = "https://api.isp.net/ddnsUpdate"
+	// optionally set myip parameter to update an ip that is not the one the request originates from
+	// p.MyIP = ""
+	p.URL = "https://api.isp.net/ddnsUpdate"
 	p.User = "me"
 	p.Host = "myPasswd"
-	u, err := ddns.URLFromParameters(&parameters)
+
+	client, err := ddns.NewClient(p)
 	if err != nil {
 		log.Fatal(err)
 	}
-	body, err := ddns.CallAPI(u)
+
+	resp, err := client.Update()
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%s", body)
+
+	body, err := ddns.ParseResponse(resp)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("%s\n", body)
 }
 */
 
@@ -48,14 +59,26 @@ func URLFromParameters(p *Parameters) (u *url.URL, err error) {
 	u.User = url.UserPassword(p.Username, p.Password)
 	q := u.Query()
 	q.Set("hostname", p.Hostname)
+	if p.MyIP != "" {
+		q.Set("myip", p.MyIP)
+	}
 	u.RawQuery = q.Encode()
 	return u, nil
 }
 
 // CallAPI takes the URL and makes a request to the API
 func CallAPI(u *url.URL) (body []byte, err error) {
+	// setup a http client
+	client := &http.Client{}
 	// make the request
-	resp, err := http.Get(u.String())
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return body, err
+	}
+	// set user-agent
+	req.Header.Set("User-Agent", "ScusiDdns/0.1 - http://github.com/scusi/ddns")
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return body, err
 	}

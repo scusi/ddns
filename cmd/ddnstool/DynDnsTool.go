@@ -13,6 +13,7 @@ import (
 type Parameters struct {
 	Url      string
 	Hostname string
+	MyIP     string
 	Username string
 	Password string
 }
@@ -22,6 +23,7 @@ var parameters Parameters
 func init() {
 	flag.StringVar(&parameters.Url, "url", "", "url to send updates to")
 	flag.StringVar(&parameters.Hostname, "host", "", "hostname to update")
+	flag.StringVar(&parameters.MyIP, "myip", "", "ip hostname should point to")
 	flag.StringVar(&parameters.Username, "user", "", "username for auth")
 	flag.StringVar(&parameters.Password, "passwd", "", "password for auth")
 }
@@ -47,6 +49,9 @@ func urlFromParameters(p *Parameters) (u *url.URL, err error) {
 	u.User = url.UserPassword(parameters.Username, parameters.Password)
 	q := u.Query()
 	q.Set("hostname", parameters.Hostname)
+	if parameters.MyIP != "" {
+		q.Set("myip", parameters.MyIP)
+	}
 	u.RawQuery = q.Encode()
 	//log.Printf("Final URL: %s\n", u.String())
 	return u, nil
