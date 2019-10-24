@@ -1,1 +1,1 @@
-module github.com/scusi/ddns/lib
+module github.com/scusi/ddns
